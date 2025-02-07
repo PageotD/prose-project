@@ -1,0 +1,59 @@
+Pour utiliser le package, il faut t'assurer d'avoir:
+
+1- une version 3.x de Python
+python -V
+
+2- un générateur d'environnements virtuels (pas obligatoire mais recommandé)
+sudo apt install python3-venv 
+
+3- les en-tête de Python
+sudo apt install python3-dev
+
+4- Un compilateur C
+sudo apt install gcc
+
+5- Une lib MPI (mpich par exemple)
+sudo apt install mpich
+
+=============================================
+
+0-Créer un dossier de travail (par exemple pyprose-work) et copier 
+"run_test.zip" et requirements.txt dedans.
+mkdir pyprose-work
+
+1-Créer un environnement virtuel dans le dossier de travail:
+python3 -m venv pyprose-venv
+
+2-Activer l'environnement virtuel (pour desactiver il suffit de taper "deactivate" dans le terminal)
+source pyprose-venv/bin/activate
+
+""" le nom de l'environnement devrait apparaître en début de command prompt dans le terminal
+
+3-Installer les dépendances (dans l'environnement virtuel)
+pip install -r requirements.txt
+
+4-Installer le package pyprose (toujours avec l'env virtuel activé)
+pip install /chemin/vers/le/package/pyprose-0.1.tar.gz
+
+""" Le package est installé sur l'environnement virtuel. 
+    Plusieurs dossiers de run peuvent être créés sans avoir besoin de réinstaller 
+    le package. Il faut juste s'assurer que l'environnement virtuel est bien activé.
+
+
+5-Décompresser le dossier test_run et rentrer dedans
+    - Le dossier s_shape contient le modèle VS et les fichiers d'acquisition.
+    - Le dossier "data" est obligatoire, c'est là que sont stocker les résultats de chaque itération. 
+    - "fparameters.ini" est le fichiers de paramètre pour le script d'inversion.
+    - "runinv_mpi.py" est le script d'inversion
+
+6-Rentrer dans le dossier test_run et lancer le script de tests (potentiellement un peu long et foireux :) )
+mpirun -np 4 python runinv_mpi.py fparameters.ini
+
+7-Une fois lancé, possibilité de voir les résultats des itérations passées (ex: l'itéaration 9)
+python plot_results.py 9
+
+==============================================================================
+
+Pour lancer d'autres runs avec d'autres paramètres, juste faire une copie du dossier
+test_run, modifier les paramètres et lancer. Tant que l'environnement virtuel est activé, le package sera accessible.
+

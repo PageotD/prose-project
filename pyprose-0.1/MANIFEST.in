@@ -1,0 +1,3 @@
+include src/pyprose/fd2d/*.pyx
+include src/pyprose/disp/*.pyx
+include src/pyprose/modgen/*.pyx
