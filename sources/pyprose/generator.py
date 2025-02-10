@@ -88,6 +88,8 @@ if __name__ == "__main__":
     # Here the max velocity is 1200 m/s max freq is 45 (15*3) so sigma=4
     # Another use is average velocity/dominant frequency
 
+    # Gaussian filter preserve geometries and velocities not inverse distance
+    
     np.random.seed(1)
 
     n1, n2, dh = 101, 601, 0.5
