@@ -23,3 +23,5 @@ def compute_diagram(gobs: np.ndarray, w: np.ndarray, v: np.ndarray, offset: np.n
     disp = np.abs(temp)
 
     return disp
+
+    # Rule of thumd: sigma must be ~equal to the dominant wavelenght to preserve the model

@@ -1,13 +1,11 @@
 import numpy as np
+from scipy.ndimage import gaussian_filter
 
 class ModelGenerator:
     def __init__(self, n1: int, n2: int, dh: float):
-        self.n1 = n1
-        self.n2 = n2
-        self.dh = dh
-        self.x_grid, self.z_grid = self._to_grid()
+        self.x_grid, self.z_grid = self._to_grid(n1, n2, dh)
 
-    def _to_grid(self) -> tuple[np.ndarray, np.ndarray]:
+    def _to_grid(self, n1: int, n2: int, dh: float) -> tuple[np.ndarray, np.ndarray]:
         """
         Function to create coordinate grids
 
@@ -22,13 +20,12 @@ class ModelGenerator:
 
         Returns
         -------
-        x_grid, z_grid
+        tuple[np.ndarray, np.ndarray]
             Coordinate grids
         """
-        x_grid, z_grid = np.meshgrid(np.arange(self.n2)*self.dh, np.arange(self.n1)*self.dh)
-        return x_grid, z_grid
-    
-    def voronoi(self, xp: np.ndarray, zp: np.ndarray, val: np.ndarray) -> np.ndarray:
+        return np.meshgrid(np.arange(n2)*dh, np.arange(n1)*dh)
+
+    def voronoi(self, xp: np.ndarray, zp: np.ndarray, val: np.ndarray, sigma=None) -> np.ndarray:
         """
         Simple Voronoi 2D interpolation.
 
@@ -40,6 +37,8 @@ class ModelGenerator:
             z-coordinates of points to interpolate
         val : np.ndarray
             value of the points to interpolate
+        sigma : float, optional
+            Standard deviation of the Gaussian kernel, by default None
 
         Returns
         -------
@@ -49,7 +48,8 @@ class ModelGenerator:
         dists = np.sqrt((self.x_grid[..., np.newaxis] - xp)**2 + (self.z_grid[..., np.newaxis] - zp)**2)
         nearest_indices = np.argmin(dists, axis=-1)
         model = val[nearest_indices]
-
+        if sigma is not None:
+            return gaussian_filter(model, sigma=sigma)
         return model    
 
     def inverse_distance(self, xp: np.ndarray, zp: np.ndarray, val: np.ndarray, pw: int) -> np.ndarray:
@@ -78,32 +78,16 @@ class ModelGenerator:
         den = np.sum(weights, axis=-1)
 
         return num / den
-    
-    def sibsons(self, xp: np.ndarray, zp: np.ndarray, val: np.ndarray) -> np.ndarray:
-        raise NotImplementedError
-    
-def voronoi(n1, n2, dh, xp, zp, val):
-    """
-    Optimized Voronoi 2D interpolation using NumPy vectorization.
-    """
-    # Create coordinate grids
-    x_grid, z_grid = np.meshgrid(np.arange(n2)*dh, np.arange(n1)*dh)
-
-    # Compute squared distances to all scatter points
-    dists = np.sqrt((x_grid[..., np.newaxis] - xp)**2 + (z_grid[..., np.newaxis] - zp)**2)
-
-    # Find the index of the nearest point for each grid cell
-    nearest_indices = np.argmin(dists, axis=-1)
-
-    # Assign values from the nearest scatter points
-    model = val[nearest_indices]
-
-    return model
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import time
     
+
+    # Rule of thumd: sigma must be ~equal to the dominant wavelenght to preserve the model
+    # Here the max velocity is 1200 m/s max freq is 45 (15*3) so sigma=4
+    # Another use is average velocity/dominant frequency
+
     np.random.seed(1)
 
     n1, n2, dh = 101, 601, 0.5
@@ -111,21 +95,29 @@ if __name__ == "__main__":
 
     xp = np.random.random(15)*float((n2-1)*dh)
     zp = np.random.random(15)*float((n1-2)*dh)
-    values = np.random.random(15)*1000
+    values = np.random.random(15)*1000+200
 
     start = time.time()
     modvoronoi = modgen.voronoi(xp, zp, values)
     print("voronoi:: ", time.time()-start, flush=True)
 
     start = time.time()
+    modvoronoismooth = modgen.voronoi(xp, zp, values, sigma=4)
+    print("voronoi smooth:: ", time.time()-start, flush=True)
+
+    start = time.time()
     modinvdist = modgen.inverse_distance(xp, zp, values, 8)
     print("inverse_distance:: ", time.time()-start, flush=True)
 
-    plt.subplot(211)
+    plt.subplot(311)
     plt.imshow(modvoronoi, extent=[0, n2*dh, n1*dh, 0])
     plt.scatter(xp, zp, edgecolors='red', facecolors='none')
 
-    plt.subplot(212)
+    plt.subplot(312)
+    plt.imshow(modvoronoismooth, extent=[0, n2*dh, n1*dh, 0])
+    plt.scatter(xp, zp, edgecolors='red', facecolors='none')
+
+    plt.subplot(313)
     plt.imshow(modinvdist, extent=[0, n2*dh, n1*dh, 0])
     plt.scatter(xp, zp, edgecolors='red', facecolors='none')
     
