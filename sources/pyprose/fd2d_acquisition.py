@@ -8,7 +8,10 @@ class Acquisition:
         self.recpos = recpos
 
     def isingrid(self, acqgrid: np.array, n1: int, n2: int):
-        return (acqgrid[:, 0] >= 0) & (acqgrid[:, 0] < n1) & (acqgrid[:, 1] >= 0) & (acqgrid[:, 1] < n2)
+        for ipos in acqgrid:
+            if ipos[0] < 0 or ipos[0] >= n1 or ipos[1] < 0 or ipos[1] >= n2:
+                return False
+        return True
 
     def to_grid(self, n1: int, n2: int, dh: float):
         """
@@ -17,7 +20,7 @@ class Acquisition:
         srcgridpos = np.array(self.srcpos / dh, dtype=np.int16)
         recgridpos = np.array(self.recpos / dh, dtype=np.int16)
 
-
+        #return srcgridpos, recgridpos
         if self.isingrid(srcgridpos, n1, n2) and self.isingrid(recgridpos, n1, n2):
             return srcgridpos, recgridpos
         
